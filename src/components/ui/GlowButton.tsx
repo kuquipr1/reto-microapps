@@ -3,13 +3,15 @@ import React from "react";
 
 export interface GlowButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "ghost";
+  isLoading?: boolean;
 }
 
 export const GlowButton = React.forwardRef<HTMLButtonElement, GlowButtonProps>(
-  ({ className, variant = "primary", ...props }, ref) => {
+  ({ className, variant = "primary", isLoading, children, ...props }, ref) => {
     return (
       <button
         ref={ref}
+        disabled={isLoading || props.disabled}
         className={cn(
           "relative inline-flex items-center justify-center rounded-xl px-4 py-3 font-medium transition-all duration-300 disabled:opacity-50 disabled:pointer-events-none",
           variant === "primary" &&
@@ -19,7 +21,14 @@ export const GlowButton = React.forwardRef<HTMLButtonElement, GlowButtonProps>(
           className
         )}
         {...props}
-      />
+      >
+        {isLoading ? (
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <span>Cargando...</span>
+          </div>
+        ) : children}
+      </button>
     );
   }
 );

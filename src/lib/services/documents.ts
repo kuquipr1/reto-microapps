@@ -20,7 +20,10 @@ export const documentService = {
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      console.error("Error fetching documents:", error);
+      throw new Error(`Error al obtener documentos: ${error.message}${error.message.includes('not found') ? ' (¿Se aplicó el esquema SQL?)' : ''}`);
+    }
     return data as DocumentMetadata[];
   },
 
@@ -36,7 +39,10 @@ export const documentService = {
       .from("documents")
       .upload(fileName, file);
 
-    if (uploadError) throw uploadError;
+    if (uploadError) {
+      console.error("Error uploading file:", uploadError);
+      throw new Error(`Error al subir archivo: ${uploadError.message}`);
+    }
 
     // 2. Save Metadata
     const { data, error } = await supabase
@@ -51,7 +57,10 @@ export const documentService = {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error("Error saving document metadata:", error);
+      throw new Error(`Error al guardar metadatos del documento: ${error.message}`);
+    }
     return data as DocumentMetadata;
   },
 
@@ -63,7 +72,10 @@ export const documentService = {
       .from("documents")
       .remove([filePath]);
 
-    if (storageError) throw storageError;
+    if (storageError) {
+      console.error("Error deleting from storage:", storageError);
+      throw new Error(`Error al eliminar del almacenamiento: ${storageError.message}`);
+    }
 
     // 2. Delete Metadata
     const { error } = await supabase
@@ -71,7 +83,10 @@ export const documentService = {
       .delete()
       .eq("id", id);
 
-    if (error) throw error;
+    if (error) {
+      console.error("Error deleting document metadata:", error);
+      throw new Error(`Error al eliminar metadatos del documento: ${error.message}`);
+    }
   },
 
   getPublicUrl(path: string) {

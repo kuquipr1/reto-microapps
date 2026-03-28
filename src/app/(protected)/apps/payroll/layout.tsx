@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
-export function PayrollSidebar() {
+function PayrollSidebar() {
   const { t } = useLanguage();
   const pathname = usePathname();
 
