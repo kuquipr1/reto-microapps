@@ -1,7 +1,22 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { isMockMode } from './client'
 
 export async function updateSession(request: NextRequest) {
+  if (isMockMode()) {
+    const isAuthRoute = request.nextUrl.pathname.startsWith('/login') || 
+                        request.nextUrl.pathname.startsWith('/signup') || 
+                        request.nextUrl.pathname.startsWith('/forgot-password');
+    const isLandingPage = request.nextUrl.pathname === '/';
+    
+    if (isAuthRoute || isLandingPage) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/dashboard'
+      return NextResponse.redirect(url)
+    }
+    return NextResponse.next()
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   })

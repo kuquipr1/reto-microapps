@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { EmployeeTable } from "@/components/payroll/EmployeeTable";
 import { AddEmployeeModal } from "@/components/payroll/AddEmployeeModal";
+import { EditEmployeeModal } from "@/components/payroll/EditEmployeeModal";
 import { payrollService, Employee } from "@/lib/services/payroll";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { useToast } from "@/components/ui/Toast";
-import { Plus, Wallet, Users, TrendingUp, DollarSign } from "lucide-react";
+import { Plus, Wallet, Users, TrendingUp, DollarSign, Building2, ArrowUpRight } from "lucide-react";
 import { GlowButton } from "@/components/ui/GlowButton";
 import { GlassCard } from "@/components/ui/GlassCard";
 
@@ -15,7 +16,8 @@ export default function PayrollDashboard() {
   const { toast } = useToast();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
 
   const fetchData = async () => {
     try {
@@ -28,15 +30,13 @@ export default function PayrollDashboard() {
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, [toast]);
+  useEffect(() => { fetchData(); }, []);
 
   const handleDelete = async (id: string) => {
     if (confirm("¿Estás seguro de eliminar este empleado?")) {
       try {
         await payrollService.deleteEmployee(id);
-        setEmployees(employees.filter(e => e.id !== id));
+        setEmployees(prev => prev.filter(e => e.id !== id));
         toast("Empleado eliminado", "success");
       } catch (error: any) {
         toast(error.message, "error");
@@ -44,12 +44,27 @@ export default function PayrollDashboard() {
     }
   };
 
-  const totalMonthly = employees.reduce((acc, emp) => acc + Number(emp.salary), 0);
+  const stats = payrollService.calculatePayroll(employees);
 
-  if (loading) return <div className="p-8 text-white/40 font-medium italic">Calculando nómina...</div>;
+  // Department breakdown
+  const departments = useMemo(() => {
+    const map = employees.reduce<Record<string, { count: number; total: number }>>((acc, emp) => {
+      const dept = emp.department || "General";
+      if (!acc[dept]) acc[dept] = { count: 0, total: 0 };
+      acc[dept].count++;
+      acc[dept].total += Number(emp.salary);
+      return acc;
+    }, {});
+    return Object.entries(map)
+      .map(([name, data]) => ({ name, ...data }))
+      .sort((a, b) => b.total - a.total);
+  }, [employees]);
+
+  if (loading) return <div className="p-8 text-white/40 animate-pulse font-medium">Calculando nómina...</div>;
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-10 animate-in fade-in duration-1000">
+      {/* Header */}
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <h1 className="text-3xl font-extrabold text-white mb-2 flex items-center gap-3">
@@ -58,20 +73,22 @@ export default function PayrollDashboard() {
           </h1>
           <p className="text-white/40 font-medium">Gestión simplificada de empleados y pagos mensuales.</p>
         </div>
-        <GlowButton onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 px-6">
+        <GlowButton onClick={() => setIsAddModalOpen(true)} className="flex items-center gap-2 px-6">
           <Plus size={20} />
           {t("payroll.add_employee")}
         </GlowButton>
       </header>
 
-      {/* Stats Cards */}
+      {/* KPI Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <GlassCard className="p-6 border-l-4 border-l-emerald-500 bg-emerald-500/5">
           <div className="flex justify-between items-start">
             <div>
               <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-1">{t("payroll.total_monthly")}</p>
-              <h3 className="text-3xl font-black text-white">${totalMonthly.toLocaleString()}</h3>
-              <p className="text-xs text-white/20 mt-2 font-medium">Próximo pago en 4 días</p>
+              <h3 className="text-3xl font-black text-white">${stats.totalMonthly.toLocaleString()}</h3>
+              <p className="text-xs text-emerald-400 mt-2 flex items-center gap-1 font-bold">
+                <ArrowUpRight size={12} /> Salario anual: ${(stats.totalMonthly * 12).toLocaleString()}
+              </p>
             </div>
             <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl">
               <DollarSign size={24} />
@@ -80,13 +97,12 @@ export default function PayrollDashboard() {
         </GlassCard>
 
         <GlassCard className="p-6 border-l-4 border-l-teal-500 bg-teal-500/5">
-           <div className="flex justify-between items-start">
+          <div className="flex justify-between items-start">
             <div>
               <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-1">{t("payroll.employees")}</p>
               <h3 className="text-3xl font-black text-white">{employees.length}</h3>
-              <p className="text-xs text-green-400 mt-2 flex items-center gap-1 font-bold">
-                <Plus size={12} />
-                Activos hoy
+              <p className="text-xs text-teal-400 mt-2 flex items-center gap-1 font-bold">
+                <Building2 size={12} /> {departments.length} departamentos
               </p>
             </div>
             <div className="p-3 bg-teal-500/10 text-teal-400 rounded-xl">
@@ -96,13 +112,14 @@ export default function PayrollDashboard() {
         </GlassCard>
 
         <GlassCard className="p-6 border-l-4 border-l-blue-500 bg-blue-500/5">
-           <div className="flex justify-between items-start">
+          <div className="flex justify-between items-start">
             <div>
-              <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-1">Rentabilidad</p>
-              <h3 className="text-3xl font-black text-white">94%</h3>
+              <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-1">Salario Promedio</p>
+              <h3 className="text-3xl font-black text-white">
+                ${Math.round(stats.averageSalary).toLocaleString()}
+              </h3>
               <p className="text-xs text-blue-400 mt-2 flex items-center gap-1 font-bold">
-                <TrendingUp size={12} />
-                +2% este mes
+                <TrendingUp size={12} /> Por empleado / mes
               </p>
             </div>
             <div className="p-3 bg-blue-500/10 text-blue-400 rounded-xl">
@@ -112,18 +129,57 @@ export default function PayrollDashboard() {
         </GlassCard>
       </div>
 
+      {/* Department Breakdown */}
+      {departments.length > 0 && (
+        <GlassCard className="p-6">
+          <h3 className="text-sm font-bold text-white/60 uppercase tracking-widest mb-6">Distribución por Departamento</h3>
+          <div className="space-y-4">
+            {departments.map((dept, i) => {
+              const pct = stats.totalMonthly > 0 ? (dept.total / stats.totalMonthly) * 100 : 0;
+              const colors = ["#10B981", "#14B8A6", "#3B82F6", "#8B5CF6", "#EC4899"];
+              const color = colors[i % colors.length];
+              return (
+                <div key={dept.name} className="space-y-1.5">
+                  <div className="flex justify-between text-xs font-bold">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
+                      <span className="text-white/70">{dept.name}</span>
+                      <span className="text-white/30">({dept.count} emp.)</span>
+                    </div>
+                    <span className="text-white">${dept.total.toLocaleString()} · {Math.round(pct)}%</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-1000 animate-in slide-in-from-left"
+                      style={{ width: `${pct}%`, backgroundColor: color, boxShadow: `0 0 8px ${color}66` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </GlassCard>
+      )}
+
+      {/* Employee Table */}
       <div className="space-y-4">
         <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            Lista de Personal
-            <span className="text-xs font-medium text-white/20 bg-white/5 px-2 py-0.5 rounded-md">{employees.length}</span>
+          Lista de Personal
+          <span className="text-xs font-medium text-white/20 bg-white/5 px-2 py-0.5 rounded-md">{employees.length}</span>
         </h2>
-        <EmployeeTable employees={employees} onDelete={handleDelete} />
+        <EmployeeTable
+          employees={employees}
+          onDelete={handleDelete}
+          onEdit={(emp) => setEditingEmployee(emp)}
+        />
       </div>
 
-      <AddEmployeeModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        onSuccess={fetchData} 
+      <AddEmployeeModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onSuccess={fetchData} />
+      <EditEmployeeModal
+        employee={editingEmployee}
+        isOpen={!!editingEmployee}
+        onClose={() => setEditingEmployee(null)}
+        onSuccess={fetchData}
       />
     </div>
   );

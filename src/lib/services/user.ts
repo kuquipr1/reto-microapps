@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/client";
+import { createClient, isMockMode } from "@/lib/supabase/client";
 
 export interface UserProfile {
   id: string;
@@ -12,6 +12,18 @@ export interface UserProfile {
 
 export const userService = {
   async getProfile() {
+    if (isMockMode()) {
+      return {
+        id: "mock-user",
+        email: "demo@user.com",
+        first_name: "Usuario",
+        last_name: "Demo",
+        role: "admin",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      } as UserProfile;
+    }
+
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     
@@ -31,6 +43,18 @@ export const userService = {
   },
 
   async updateProfile(profile: Partial<Pick<UserProfile, "first_name" | "last_name">>) {
+    if (isMockMode()) {
+      return {
+        id: "mock-user",
+        email: "demo@user.com",
+        first_name: profile.first_name || "Usuario",
+        last_name: profile.last_name || "Demo",
+        role: "admin",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      } as UserProfile;
+    }
+
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     

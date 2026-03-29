@@ -55,6 +55,15 @@ export const microApps: MicroApp[] = [
     route: "/apps/documents",
   },
   {
+    id: "helpdesk",
+    nameKey: "apps.helpdesk.name",
+    descriptionKey: "apps.helpdesk.description",
+    icon: "Headphones",
+    status: "active",
+    category: "business",
+    route: "/apps/helpdesk",
+  },
+  {
     id: "settings-portal",
     nameKey: "apps.settings.name",
     descriptionKey: "apps.settings.description",

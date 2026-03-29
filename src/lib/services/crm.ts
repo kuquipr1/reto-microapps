@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/client";
+import { createClient, isMockMode } from "@/lib/supabase/client";
 
 export interface Customer {
   id: string;
@@ -15,8 +15,52 @@ export interface Customer {
 
 export type CustomerInput = Omit<Customer, "id" | "user_id" | "created_at" | "updated_at">;
 
+const MOCK_CUSTOMERS: Customer[] = [
+  {
+    id: "1",
+    user_id: "mock-user",
+    first_name: "Juan",
+    last_name: "Pérez",
+    email: "juan@example.com",
+    phone: "+34 600 000 001",
+    company: "TechNova S.L.",
+    status: "customer",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: "2",
+    user_id: "mock-user",
+    first_name: "María",
+    last_name: "García",
+    email: "maria@empresa.es",
+    phone: "+34 600 000 002",
+    company: "Logística Global",
+    status: "prospect",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: "3",
+    user_id: "mock-user",
+    first_name: "Carlos",
+    last_name: "Rodríguez",
+    email: "carlos@startup.io",
+    phone: "+34 600 000 003",
+    company: "Ventas Inteligentes",
+    status: "lead",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  }
+];
+
 export const crmService = {
   async getCustomers() {
+    if (isMockMode()) {
+      console.log("Using Mock CRM Data");
+      return MOCK_CUSTOMERS;
+    }
+
     const supabase = createClient();
     const { data, error } = await supabase
       .from("customers")
@@ -31,6 +75,18 @@ export const crmService = {
   },
 
   async addCustomer(customer: CustomerInput) {
+    if (isMockMode()) {
+      const newCustomer = { 
+        ...customer, 
+        id: Math.random().toString(36).substr(2, 9),
+        user_id: "mock-user",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      MOCK_CUSTOMERS.unshift(newCustomer);
+      return newCustomer;
+    }
+
     const supabase = createClient();
     const { data: userData } = await supabase.auth.getUser();
     
@@ -42,11 +98,23 @@ export const crmService = {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error("Error adding customer:", error);
+      throw new Error(`Error al añadir cliente: ${error.message}`);
+    }
     return data as Customer;
   },
 
   async updateCustomer(id: string, customer: Partial<CustomerInput>) {
+    if (isMockMode()) {
+      const index = MOCK_CUSTOMERS.findIndex(c => c.id === id);
+      if (index !== -1) {
+        MOCK_CUSTOMERS[index] = { ...MOCK_CUSTOMERS[index], ...customer, updated_at: new Date().toISOString() };
+        return MOCK_CUSTOMERS[index];
+      }
+      throw new Error("Customer not found in mock data");
+    }
+
     const supabase = createClient();
     const { data, error } = await supabase
       .from("customers")
@@ -60,6 +128,12 @@ export const crmService = {
   },
 
   async deleteCustomer(id: string) {
+    if (isMockMode()) {
+       const index = MOCK_CUSTOMERS.findIndex(c => c.id === id);
+       if (index !== -1) MOCK_CUSTOMERS.splice(index, 1);
+       return;
+    }
+
     const supabase = createClient();
     const { error } = await supabase
       .from("customers")

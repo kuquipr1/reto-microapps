@@ -2,15 +2,15 @@
 
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { Employee } from "@/lib/services/payroll";
-import { GlowButton } from "@/components/ui/GlowButton";
-import { User, Briefcase, Mail, DollarSign, Trash2 } from "lucide-react";
+import { Briefcase, Mail, DollarSign, Trash2, Edit2 } from "lucide-react";
 
 interface EmployeeTableProps {
   employees: Employee[];
   onDelete: (id: string) => void;
+  onEdit?: (employee: Employee) => void;
 }
 
-export function EmployeeTable({ employees, onDelete }: EmployeeTableProps) {
+export function EmployeeTable({ employees, onDelete, onEdit }: EmployeeTableProps) {
   const { t } = useLanguage();
 
   return (
@@ -57,12 +57,22 @@ export function EmployeeTable({ employees, onDelete }: EmployeeTableProps) {
                 </div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-right">
-                <button 
-                  onClick={() => onDelete(emp.id)}
-                  className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 opacity-0 group-hover:opacity-100 transition-all"
-                >
-                  <Trash2 size={16} />
-                </button>
+                <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {onEdit && (
+                    <button
+                      onClick={() => onEdit(emp)}
+                      className="p-2 rounded-lg bg-white/5 text-white/60 hover:text-white hover:bg-white/10 transition-all"
+                    >
+                      <Edit2 size={16} />
+                    </button>
+                  )}
+                  <button
+                    onClick={() => onDelete(emp.id)}
+                    className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </td>
             </tr>
           ))}

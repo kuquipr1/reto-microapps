@@ -9,6 +9,8 @@ import { Plus, Users, Search } from "lucide-react";
 import { GlowButton } from "@/components/ui/GlowButton";
 import { Input } from "@/components/ui/Input";
 import { AddCustomerModal } from "@/components/crm/AddCustomerModal";
+import { EditCustomerModal } from "@/components/crm/EditCustomerModal";
+import { StatsGrid } from "@/components/crm/StatsGrid";
 
 export default function CustomerListPage() {
   const { t } = useLanguage();
@@ -16,7 +18,8 @@ export default function CustomerListPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
 
   const fetchData = async () => {
     try {
@@ -31,27 +34,31 @@ export default function CustomerListPage() {
 
   useEffect(() => {
     fetchData();
-  }, [toast]);
+  }, []);
 
   const handleDelete = async (id: string) => {
-    if (confirm("Are you sure?")) {
+    if (confirm("¿Estás seguro de eliminar este cliente?")) {
       try {
         await crmService.deleteCustomer(id);
-        setCustomers(customers.filter(c => c.id !== id));
-        toast("Customer deleted", "success");
+        setCustomers(prev => prev.filter(c => c.id !== id));
+        toast("Cliente eliminado", "success");
       } catch (error: any) {
         toast(error.message, "error");
       }
     }
   };
 
-  const filteredCustomers = customers.filter(c => 
+  const handleEdit = (customer: Customer) => {
+    setEditingCustomer(customer);
+  };
+
+  const filteredCustomers = customers.filter(c =>
     `${c.first_name} ${c.last_name}`.toLowerCase().includes(search.toLowerCase()) ||
     c.email?.toLowerCase().includes(search.toLowerCase()) ||
     c.company?.toLowerCase().includes(search.toLowerCase())
   );
 
-  if (loading) return <div className="p-8 text-white/40">Loading customers...</div>;
+  if (loading) return <div className="p-8 text-white/40 animate-pulse">Cargando clientes...</div>;
 
   return (
     <div className="p-8 max-w-7xl mx-auto animate-in fade-in duration-700">
@@ -61,16 +68,20 @@ export default function CustomerListPage() {
             <Users className="text-[var(--color-primary)]" />
             {t("crm.customers")}
           </h2>
-          <p className="text-sm text-white/40">Manage all your client information in one place</p>
+          <p className="text-sm text-white/40">
+            {filteredCustomers.length} clientes · Gestiona toda tu información de clientes
+          </p>
         </div>
-        <GlowButton onClick={() => setIsModalOpen(true)} className="text-sm flex items-center gap-2">
+        <GlowButton onClick={() => setIsAddModalOpen(true)} className="text-sm flex items-center gap-2">
           <Plus size={16} />
           {t("crm.add_customer")}
         </GlowButton>
       </header>
 
+      <StatsGrid customers={customers} />
+
       <div className="mb-8 max-w-md">
-        <Input 
+        <Input
           placeholder={t("crm.search_customer")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -79,16 +90,23 @@ export default function CustomerListPage() {
         />
       </div>
 
-      <CustomerTable 
-        customers={filteredCustomers} 
+      <CustomerTable
+        customers={filteredCustomers}
         onDelete={handleDelete}
-        onEdit={() => {}}
+        onEdit={handleEdit}
       />
 
-      <AddCustomerModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        onSuccess={fetchData} 
+      <AddCustomerModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSuccess={fetchData}
+      />
+
+      <EditCustomerModal
+        customer={editingCustomer}
+        isOpen={!!editingCustomer}
+        onClose={() => setEditingCustomer(null)}
+        onSuccess={fetchData}
       />
     </div>
   );

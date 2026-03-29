@@ -73,6 +73,8 @@ const translations: Translations = {
   "apps.payroll.description": { es: "Gestión de nómina y beneficios automatizada.", en: "Automated payroll and benefits management." },
   "apps.documents.name": { es: "DocuVerse", en: "DocuVerse" },
   "apps.documents.description": { es: "Almacenamiento y edición colaborativa de documentos.", en: "Collaborative document storage and editing." },
+  "apps.helpdesk.name": { es: "HelpDesk", en: "HelpDesk" },
+  "apps.helpdesk.description": { es: "Gestión de tickets de soporte y atención al cliente.", en: "Support ticket management and customer service." },
   "apps.settings.name": { es: "Portal Config", en: "Portal Config" },
   "apps.settings.description": { es: "Personaliza tu experiencia y gestiona tu cuenta.", en: "Customize your experience and manage your account." },
 
@@ -183,10 +185,6 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     if (!translations[key]) return key;
     return translations[key][language];
   };
-
-  if (!mounted) {
-    return <div className="min-h-screen bg-[var(--color-base-100)]" />;
-  }
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage: changeLanguage, t }}>
