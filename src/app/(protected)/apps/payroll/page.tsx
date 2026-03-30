@@ -80,7 +80,7 @@ export default function PayrollDashboard() {
       </header>
 
       {/* KPI Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div id="payments" className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
         <GlassCard className="p-6 border-l-4 border-l-emerald-500 bg-emerald-500/5">
           <div className="flex justify-between items-start">
             <div>
@@ -162,7 +162,7 @@ export default function PayrollDashboard() {
       )}
 
       {/* Employee Table */}
-      <div className="space-y-4">
+      <div id="employees" className="space-y-4 pt-4">
         <h2 className="text-xl font-bold text-white flex items-center gap-2">
           Lista de Personal
           <span className="text-xs font-medium text-white/20 bg-white/5 px-2 py-0.5 rounded-md">{employees.length}</span>

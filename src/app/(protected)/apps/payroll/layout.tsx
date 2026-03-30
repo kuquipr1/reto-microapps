@@ -12,8 +12,8 @@ function PayrollSidebar() {
 
   const menuItems = [
     { icon: LayoutDashboard, label: "Overview", href: "/apps/payroll" },
-    { icon: Users, label: t("payroll.employees"), href: "/apps/payroll/employees" },
-    { icon: CreditCard, label: "Payments", href: "/apps/payroll/payments" },
+    { icon: Users, label: t("payroll.employees") || "Empleados", href: "/apps/payroll#employees" },
+    { icon: CreditCard, label: "Payments", href: "/apps/payroll#payments" },
   ];
 
   return (
@@ -28,7 +28,8 @@ function PayrollSidebar() {
       <nav className="flex-grow p-4 space-y-2">
         {menuItems.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href;
+          const isActive = pathname === item.href.split('#')[0];
+          
           return (
             <Link
               key={item.href}
