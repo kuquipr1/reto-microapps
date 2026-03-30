@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { GlowButton } from '@/components/ui/GlowButton'
 import { Input } from '@/components/ui/Input'
-import { useToast } from '@/components/ui/ToastProvider'
+import { useToast } from '@/components/ui/Toast'
 import { Mail, Lock } from 'lucide-react'
 import { t } from '@/lib/i18n'
 
@@ -17,7 +17,7 @@ export default function LoginForm() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { addToast } = useToast()
+  const { toast: addToast } = useToast()
   const supabase = createClient()
 
   useEffect(() => {

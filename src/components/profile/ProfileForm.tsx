@@ -5,13 +5,13 @@ import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { userService, UserProfile } from "@/lib/services/user";
 import { Input } from "@/components/ui/Input";
 import { GlowButton } from "@/components/ui/GlowButton";
-import { useToast } from "@/components/ui/ToastProvider";
+import { useToast } from "@/components/ui/Toast";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { User, Mail, Save, Loader2, Camera, UserSquare } from "lucide-react";
 
 export function ProfileForm() {
   const { language } = useLanguage();
-  const { addToast } = useToast();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -31,13 +31,13 @@ export function ProfileForm() {
           lastName: data.last_name || "",
         });
       } catch (error: any) {
-        addToast(error.message, "error");
+        toast(error.message, "error");
       } finally {
         setLoading(false);
       }
     }
     loadProfile();
-  }, [addToast]);
+  }, [toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,14 +48,14 @@ export function ProfileForm() {
         first_name: formData.firstName,
         last_name: formData.lastName,
       });
-      addToast(
+      toast(
         language === "en" ? "Profile updated successfully." : "Perfil actualizado con éxito.", 
         "success" 
       );
       
       // Update local storage/context if needed, or just let the header re-fetch on reload
     } catch (error: any) {
-      addToast(
+      toast(
         language === "en" ? "Error updating profile." : "Error al actualizar el perfil.", 
         "error" 
       );
