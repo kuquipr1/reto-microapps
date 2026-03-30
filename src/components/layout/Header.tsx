@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Menu, Search, Bell, LogOut, Settings, User as UserIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
@@ -113,14 +114,14 @@ export function Header({ onToggleMobileSidebar }: { onToggleMobileSidebar: () =>
                   <p className="text-xs text-white/40 truncate">{user?.email}</p>
                 </div>
                 <div className="p-2 space-y-1">
-                  <button className="w-full text-left px-3 py-2 text-sm text-white/70 hover:text-white flex items-center gap-2 hover:bg-white/10 rounded-lg transition-colors">
+                  <Link href="/settings" className="w-full text-left px-3 py-2 text-sm text-white/70 hover:text-white flex items-center gap-2 hover:bg-white/10 rounded-lg transition-colors">
                     <UserIcon size={16} />
                     {language === 'en' ? 'Profile' : 'Perfil'}
-                  </button>
-                  <button className="w-full text-left px-3 py-2 text-sm text-white/70 hover:text-white flex items-center gap-2 hover:bg-white/10 rounded-lg transition-colors">
+                  </Link>
+                  <Link href="/settings" className="w-full text-left px-3 py-2 text-sm text-white/70 hover:text-white flex items-center gap-2 hover:bg-white/10 rounded-lg transition-colors">
                     <Settings size={16} />
                     {language === 'en' ? 'Settings' : 'Configuración'}
-                  </button>
+                  </Link>
                   <div className="h-px bg-white/10 my-1" />
                   <button 
                     onClick={handleLogout}
