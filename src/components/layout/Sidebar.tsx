@@ -3,7 +3,8 @@
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronsLeft, ChevronsRight, X, LayoutDashboard, Users, BarChart3, HeadphonesIcon, FolderOpen, FileText, UploadCloud, Edit2 } from "lucide-react";
+import { ChevronsLeft, ChevronsRight, X, LayoutDashboard, Users, BarChart3, HeadphonesIcon, FolderOpen, FileText, UploadCloud, Edit2, TrendingUp, Mail, Package, Lock, Layers, PenTool, Share2, Video } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface SidebarProps {
@@ -23,6 +24,8 @@ export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile
   const [isEditing, setIsEditing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [dynamicApps, setDynamicApps] = useState<any[]>([]);
+
   useEffect(() => {
     const savedLogo = localStorage.getItem("custom_logo");
     const savedName = localStorage.getItem("custom_appName");
@@ -30,6 +33,16 @@ export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile
     if (savedLogo) setLogo(savedLogo);
     if (savedName) setAppName(savedName);
     if (savedSlogan) setSlogan(savedSlogan);
+
+    // Fetch dynamic micro apps
+    const fetchApps = async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase.from('micro_apps').select('slug, name_es, name_en, icon');
+        if (data && !error) setDynamicApps(data);
+      } catch (e) {}
+    };
+    fetchApps();
   }, []);
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -97,6 +110,11 @@ export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile
       icon: BarChart3,
     },
     {
+      name: language === "en" ? "Growth (MRR)" : "Crecimiento",
+      href: "/apps/growth",
+      icon: TrendingUp,
+    },
+    {
       name: language === "en" ? "HelpDesk" : "Soporte (HelpDesk)",
       href: "/apps/helpdesk",
       icon: HeadphonesIcon,
@@ -111,6 +129,29 @@ export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile
       href: "/apps/payroll",
       icon: FileText,
     },
+  ];
+
+  // Helper map to dynamically render standard lucide icons returned as string from DB
+  const getIcon = (iconName: string) => {
+    const icons: any = {
+      Mail: Mail,
+      Package: Package,
+      Lock: Lock,
+      BarChart3: BarChart3,
+      PenTool: PenTool,
+      Share2: Share2,
+      Video: Video
+    };
+    return icons[iconName] || Layers; // Fallback icon
+  };
+
+  const allLinks = [
+    ...links,
+    ...dynamicApps.map(app => ({
+      name: language === "en" ? app.name_en : app.name_es,
+      href: `/apps/${app.slug}`,
+      icon: getIcon(app.icon)
+    }))
   ];
 
   const content = (
@@ -188,7 +229,7 @@ export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile
 
       {/* Navigation */}
       <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-        {links.map((link) => {
+        {allLinks.map((link) => {
           const isActive = pathname === link.href;
           const Icon = link.icon;
           return (

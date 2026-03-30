@@ -13,7 +13,7 @@ function AnalyticsSidebar() {
 
   const menuItems = [
     { icon: LayoutDashboard, label: "Overview", href: "/apps/analytics" },
-    { icon: BarChart3, label: "Growth", href: "/apps/analytics/growth" },
+    { icon: BarChart3, label: "Growth", href: "/apps/growth" },
     { icon: PieChart, label: "Market", href: "/apps/analytics/market" },
   ];
 
