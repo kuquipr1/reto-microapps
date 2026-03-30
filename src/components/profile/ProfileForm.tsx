@@ -143,7 +143,7 @@ export function ProfileForm() {
             {avatar ? (
               <img src={avatar} alt="Avatar" className="w-full h-full object-cover" />
             ) : (
-              formData.firstName?.[0]?.toUpperCase() || profile?.email?.[0]?.toUpperCase() || "E"
+              formData.firstName?.[0]?.toUpperCase() || profile?.email?.[0]?.toUpperCase() || "U"
             )}
           </div>
           <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 bg-black/50 transition-all flex items-center justify-center backdrop-blur-sm">
@@ -156,9 +156,13 @@ export function ProfileForm() {
         </div>
 
         <h3 className="text-xl font-bold text-white z-10 text-center mb-1">
-          {formData.firstName || "Eric"} {formData.lastName || "Collin"}
+          {formData.firstName || formData.lastName 
+            ? `${formData.firstName} ${formData.lastName}` 
+            : (language === "en" ? "New User" : "Nuevo Usuario")}
         </h3>
-        <p className="text-sm text-white/50 z-10 mb-8 text-center">{profile?.email || "eccollin@gmail.com"}</p>
+        <p className="text-sm text-white/50 z-10 mb-8 text-center">
+          {profile?.email || (language === "en" ? "No email provided" : "Sin correo")}
+        </p>
 
         {/* Role & Level Blocks */}
         <div className="w-full space-y-3 z-10">
@@ -208,7 +212,7 @@ export function ProfileForm() {
                 icon={<User size={16} className="text-white/40" />}
                 value={formData.firstName}
                 onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                placeholder="Eric"
+                placeholder={language === "en" ? "John" : "Juan"}
                 className="bg-black/20 border-white/5 focus:border-[var(--color-primary)]/50 focus:bg-white/5 transition-all text-white/90 h-11"
               />
             </div>
@@ -220,7 +224,7 @@ export function ProfileForm() {
                 icon={<User size={16} className="text-white/40" />}
                 value={formData.lastName}
                 onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                placeholder="Collin"
+                placeholder={language === "en" ? "Doe" : "Pérez"}
                 className="bg-black/20 border-white/5 focus:border-[var(--color-primary)]/50 focus:bg-white/5 transition-all text-white/90 h-11"
               />
             </div>
