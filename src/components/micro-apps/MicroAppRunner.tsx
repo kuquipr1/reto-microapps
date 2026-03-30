@@ -57,21 +57,30 @@ export function MicroAppRunner({ app }: { app: MicroAppConfig }) {
 
     setIsGenerating(true);
     try {
-      // In a real implementation this calls an AI endpoint (/api/ai/generate)
-      // passing the prompt_template dynamically mapped with formValues and responseLanguage
-      
-      // Simulate API delay for demo
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      
       let finalPrompt = app.prompt_template;
       finalPrompt = finalPrompt.replace(/{{responseLanguage}}/g, responseLanguage === "es" ? "Español" : "English");
       
-      // Map user values to the prompt just to show a mock result generated from template structure
-      // Realistically we would send `finalPrompt` to OpenAI/Anthropic.
-      
-      setResult(`## Simulación de IA Exitosa ✨\n\nEl sistema recibió correctamente el formulario dinámico. Variables inyectadas en la petición:\n\n- Producto: **${formValues.product || 'N/A'}**\n- Objetivo: **${formValues.goal || 'N/A'}**\n- Cantidad: **${formValues.count || 'N/A'}**\n\nEsta es una vista previa simulada. Asegúrate de conectar el endpoint real de IA en \`handleGenerate\` dentro de \`MicroAppRunner.tsx\`.`);
-    } catch (error) {
-      toast("Error generating content", "error");
+      Object.keys(formValues).forEach(key => {
+        const regex = new RegExp(`{{${key}}}`, "g");
+        const val = formValues[key] || "";
+        finalPrompt = finalPrompt.replace(regex, val);
+      });
+
+      const response = await fetch("/api/ai/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: finalPrompt }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Error al conectar con la API de IA");
+      }
+
+      setResult(data.result);
+    } catch (error: any) {
+      toast(error.message || "Error generating content", "error");
     } finally {
       setIsGenerating(false);
     }
