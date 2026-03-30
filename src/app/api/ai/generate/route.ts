@@ -4,41 +4,36 @@ export async function POST(req: Request) {
   try {
     const { prompt } = await req.json();
 
-    if (!process.env.GEMINI_API_KEY) {
+    if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json(
-        { error: "Error: No se encontró la GEMINI_API_KEY en tus variables de entorno (.env.local o Vercel)." },
+        { error: "Error: No se encontró la OPENAI_API_KEY en tus variables de entorno (.env.local o Vercel)." },
         { status: 500 }
       );
     }
 
-    // Google Gemini (Gemini 1.5 Flash) Native API REST Call
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
-    
-    const response = await fetch(url, {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
       },
       body: JSON.stringify({
-        contents: [{
-          parts: [{ text: prompt }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-        }
+        model: "gpt-4o-mini",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.7,
       }),
     });
 
     if (!response.ok) {
       const errorData = await response.json();
       return NextResponse.json(
-        { error: errorData.error?.message || "Error al conectar con Gemini API" },
+        { error: errorData.error?.message || "Error al conectar con OpenAI" },
         { status: response.status }
       );
     }
 
     const data = await response.json();
-    const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    const resultText = data.choices[0]?.message?.content || "";
 
     return NextResponse.json({ result: resultText });
   } catch (error: any) {
