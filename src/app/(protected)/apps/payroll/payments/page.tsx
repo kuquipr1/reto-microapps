@@ -49,7 +49,7 @@ export default function PaymentsPage() {
           </p>
         </div>
         <div className="flex gap-4">
-          <GlowButton variant="secondary" className="gap-2 border-white/10 hover:border-white/20">
+          <GlowButton variant="ghost" className="gap-2 border-white/10 hover:border-white/20">
             <Download size={18} />
             {language === "en" ? "Export XML" : "Exportar XML"}
           </GlowButton>
