@@ -5,6 +5,7 @@ export interface UserProfile {
   email: string;
   first_name: string | null;
   last_name: string | null;
+  avatar_url?: string | null;
   role: "admin" | "user";
   created_at: string;
   updated_at: string;
@@ -42,7 +43,7 @@ export const userService = {
     return data as UserProfile;
   },
 
-  async updateProfile(profile: Partial<Pick<UserProfile, "first_name" | "last_name">>) {
+  async updateProfile(profile: Partial<Pick<UserProfile, "first_name" | "last_name" | "avatar_url">>) {
     if (isMockMode()) {
       return {
         id: "mock-user",

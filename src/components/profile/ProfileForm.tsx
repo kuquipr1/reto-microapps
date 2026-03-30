@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { userService, UserProfile } from "@/lib/services/user";
 import { Input } from "@/components/ui/Input";
@@ -15,6 +15,8 @@ export function ProfileForm() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [avatar, setAvatar] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -26,6 +28,7 @@ export function ProfileForm() {
       try {
         const data = await userService.getProfile();
         setProfile(data);
+        setAvatar(data.avatar_url || null);
         setFormData({
           firstName: data.first_name || "",
           lastName: data.last_name || "",
@@ -39,6 +42,52 @@ export function ProfileForm() {
     loadProfile();
   }, [toast]);
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast(language === "en" ? "File too large (Max 5MB)" : "Archivo muy grande (Máx 5MB)", "error");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        const MAX_WIDTH = 400;
+        const MAX_HEIGHT = 400;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        ctx?.drawImage(img, 0, 0, width, height);
+        
+        const dataUrl = canvas.toDataURL("image/webp", 0.8);
+        setAvatar(dataUrl);
+      };
+      if (event.target?.result) {
+        img.src = event.target.result as string;
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -47,6 +96,7 @@ export function ProfileForm() {
       await userService.updateProfile({
         first_name: formData.firstName,
         last_name: formData.lastName,
+        avatar_url: avatar,
       });
       toast(
         language === "en" ? "Profile updated successfully." : "Perfil actualizado con éxito.", 
@@ -80,9 +130,21 @@ export function ProfileForm() {
       <GlassCard className="w-full md:w-80 p-8 flex flex-col items-center relative overflow-hidden shrink-0">
         <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-[var(--color-primary)]/20 to-transparent rounded-full blur-[60px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
         
-        <div className="relative group cursor-pointer mb-6 z-10 mt-2">
-          <div className="w-32 h-32 rounded-full border border-white/5 flex items-center justify-center text-5xl font-black text-white/50 shadow-xl group-hover:scale-105 transition-transform" style={{ background: "radial-gradient(circle, rgba(23,17,46,1) 0%, rgba(26,21,48,1) 100%)" }}>
-            {formData.firstName?.[0]?.toUpperCase() || profile?.email?.[0]?.toUpperCase() || "E"}
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          hidden 
+          accept="image/*" 
+          onChange={handleImageChange} 
+        />
+
+        <div onClick={() => fileInputRef.current?.click()} className="relative group cursor-pointer mb-6 z-10 mt-2">
+          <div className="w-32 h-32 rounded-full border border-white/5 flex items-center justify-center text-5xl font-black text-white/50 shadow-xl group-hover:scale-105 transition-transform overflow-hidden" style={{ background: "radial-gradient(circle, rgba(23,17,46,1) 0%, rgba(26,21,48,1) 100%)" }}>
+            {avatar ? (
+              <img src={avatar} alt="Avatar" className="w-full h-full object-cover" />
+            ) : (
+              formData.firstName?.[0]?.toUpperCase() || profile?.email?.[0]?.toUpperCase() || "E"
+            )}
           </div>
           <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 bg-black/50 transition-all flex items-center justify-center backdrop-blur-sm">
             <Camera className="text-white" size={24} />

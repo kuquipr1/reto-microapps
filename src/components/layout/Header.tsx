@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Menu, Search, Bell, LogOut, Settings, User as UserIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { userService, UserProfile } from "@/lib/services/user";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { Input } from "@/components/ui/Input";
@@ -14,6 +15,7 @@ export function Header({ onToggleMobileSidebar }: { onToggleMobileSidebar: () =>
   const { language } = useLanguage();
   const supabase = createClient();
   const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
 
@@ -21,6 +23,7 @@ export function Header({ onToggleMobileSidebar }: { onToggleMobileSidebar: () =>
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user);
     });
+    userService.getProfile().then(setProfile).catch(() => {});
   }, []);
 
   const handleLogout = async () => {
@@ -97,8 +100,12 @@ export function Header({ onToggleMobileSidebar }: { onToggleMobileSidebar: () =>
             }}
             className="flex items-center gap-2"
           >
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent-blue)] flex items-center justify-center -rotate-3 hover:rotate-0 transition-transform shadow-lg border border-white/10">
-              <span className="text-xs font-bold text-white shrink-0 tracking-widest">{initials}</span>
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center -rotate-3 hover:rotate-0 transition-transform shadow-lg border border-white/10 overflow-hidden ${!profile?.avatar_url ? 'bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent-blue)]' : ''}`}>
+              {profile?.avatar_url ? (
+                <img src={profile.avatar_url} alt="User Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-xs font-bold text-white shrink-0 tracking-widest">{initials}</span>
+              )}
             </div>
           </button>
 
