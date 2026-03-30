@@ -1,23 +1,18 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { EmployeeTable } from "@/components/payroll/EmployeeTable";
-import { AddEmployeeModal } from "@/components/payroll/AddEmployeeModal";
-import { EditEmployeeModal } from "@/components/payroll/EditEmployeeModal";
 import { payrollService, Employee } from "@/lib/services/payroll";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { useToast } from "@/components/ui/Toast";
-import { Plus, Wallet, Users, TrendingUp, DollarSign, Building2, ArrowUpRight } from "lucide-react";
-import { GlowButton } from "@/components/ui/GlowButton";
+import { Wallet, Users, TrendingUp, DollarSign, Building2, ArrowUpRight } from "lucide-react";
 import { GlassCard } from "@/components/ui/GlassCard";
+import Link from "next/link";
 
 export default function PayrollDashboard() {
   const { t } = useLanguage();
   const { toast } = useToast();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
 
   const fetchData = async () => {
     try {
@@ -32,17 +27,7 @@ export default function PayrollDashboard() {
 
   useEffect(() => { fetchData(); }, []);
 
-  const handleDelete = async (id: string) => {
-    if (confirm("¿Estás seguro de eliminar este empleado?")) {
-      try {
-        await payrollService.deleteEmployee(id);
-        setEmployees(prev => prev.filter(e => e.id !== id));
-        toast("Empleado eliminado", "success");
-      } catch (error: any) {
-        toast(error.message, "error");
-      }
-    }
-  };
+
 
   const stats = payrollService.calculatePayroll(employees);
 
@@ -69,14 +54,13 @@ export default function PayrollDashboard() {
         <div>
           <h1 className="text-3xl font-extrabold text-white mb-2 flex items-center gap-3">
             <Wallet className="text-emerald-400" />
-            {t("payroll.title")}
+            {t("payroll.title") || "Nóminas y Pagos"}
           </h1>
           <p className="text-white/40 font-medium">Gestión simplificada de empleados y pagos mensuales.</p>
         </div>
-        <GlowButton onClick={() => setIsAddModalOpen(true)} className="flex items-center gap-2 px-6">
-          <Plus size={20} />
-          {t("payroll.add_employee")}
-        </GlowButton>
+        <Link href="/apps/payroll/employees" className="px-6 py-2.5 rounded-xl bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 text-sm font-bold hover:bg-emerald-600/30 transition-all">
+          Gestionar Trabajadores →
+        </Link>
       </header>
 
       {/* KPI Stats */}
@@ -161,26 +145,7 @@ export default function PayrollDashboard() {
         </GlassCard>
       )}
 
-      {/* Employee Table */}
-      <div id="employees" className="space-y-4 pt-4">
-        <h2 className="text-xl font-bold text-white flex items-center gap-2">
-          Lista de Personal
-          <span className="text-xs font-medium text-white/20 bg-white/5 px-2 py-0.5 rounded-md">{employees.length}</span>
-        </h2>
-        <EmployeeTable
-          employees={employees}
-          onDelete={handleDelete}
-          onEdit={(emp) => setEditingEmployee(emp)}
-        />
-      </div>
 
-      <AddEmployeeModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onSuccess={fetchData} />
-      <EditEmployeeModal
-        employee={editingEmployee}
-        isOpen={!!editingEmployee}
-        onClose={() => setEditingEmployee(null)}
-        onSuccess={fetchData}
-      />
     </div>
   );
 }
