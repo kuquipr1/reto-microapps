@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronsLeft, ChevronsRight, X, LayoutDashboard, Users, BarChart3, HeadphonesIcon, FolderOpen, FileText, UploadCloud, Edit2, TrendingUp, Mail, Package, Lock, Layers, PenTool, Share2, Video } from "lucide-react";
+import { ChevronsLeft, ChevronsRight, X, LayoutDashboard, Users, BarChart3, HeadphonesIcon, FolderOpen, FileText, UploadCloud, Edit2, TrendingUp, Mail, Package, Lock, Layers, PenTool, Share2, Video, Briefcase } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
@@ -140,7 +140,8 @@ export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile
       BarChart3: BarChart3,
       PenTool: PenTool,
       Share2: Share2,
-      Video: Video
+      Video: Video,
+      Briefcase: Briefcase
     };
     return icons[iconName] || Layers; // Fallback icon
   };
