@@ -1,8 +1,9 @@
 "use client";
 
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronsLeft, ChevronsRight, X, LayoutDashboard, Users, BarChart3, HeadphonesIcon, FolderOpen, FileText } from "lucide-react";
+import { ChevronsLeft, ChevronsRight, X, LayoutDashboard, Users, BarChart3, HeadphonesIcon, FolderOpen, FileText, UploadCloud, Edit2 } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface SidebarProps {
@@ -15,6 +16,69 @@ interface SidebarProps {
 export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile }: SidebarProps) {
   const { language } = useLanguage();
   const pathname = usePathname();
+
+  const [logo, setLogo] = useState<string | null>(null);
+  const [appName, setAppName] = useState("Micro Apps");
+  const [slogan, setSlogan] = useState("Your Portal");
+  const [isEditing, setIsEditing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const savedLogo = localStorage.getItem("custom_logo");
+    const savedName = localStorage.getItem("custom_appName");
+    const savedSlogan = localStorage.getItem("custom_slogan");
+    if (savedLogo) setLogo(savedLogo);
+    if (savedName) setAppName(savedName);
+    if (savedSlogan) setSlogan(savedSlogan);
+  }, []);
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        const maxSize = 128;
+        let { width, height } = img;
+
+        if (width > height) {
+          if (width > maxSize) {
+            height *= maxSize / width;
+            width = maxSize;
+          }
+        } else {
+          if (height > maxSize) {
+            width *= maxSize / height;
+            height = maxSize;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        ctx?.drawImage(img, 0, 0, width, height);
+        
+        const dataUrl = canvas.toDataURL("image/webp", 0.9);
+        setLogo(dataUrl);
+        localStorage.setItem("custom_logo", dataUrl);
+      };
+      if (ev.target?.result) img.src = ev.target.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAppName(e.target.value);
+    localStorage.setItem("custom_appName", e.target.value);
+  };
+
+  const handleSloganChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSlogan(e.target.value);
+    localStorage.setItem("custom_slogan", e.target.value);
+  };
 
   const links = [
     {
@@ -52,17 +116,72 @@ export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile
   const content = (
     <div className="flex flex-col h-full bg-[#0A0520]/80 backdrop-blur-2xl border-r border-white/10 text-white transition-all duration-300">
       {/* Top Section */}
-      <div className="flex items-center justify-between h-16 shrink-0 px-4 border-b border-white/10">
-        <div className={`flex items-center gap-3 overflow-hidden ${collapsed ? 'w-0 opacity-0 lg:w-auto lg:opacity-100' : 'w-auto opacity-100'}`}>
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent-pink)] shrink-0 flex items-center justify-center font-bold shadow-lg">
-            M
+      <div className={`flex items-start justify-between shrink-0 p-4 border-b border-white/10 relative group ${!collapsed && isEditing ? "bg-white/5" : ""}`}>
+        
+        <input type="file" ref={fileInputRef} hidden accept="image/*" onChange={handleLogoUpload} />
+
+        <div className={`flex items-center gap-3 overflow-hidden ${collapsed ? 'w-0 opacity-0 lg:w-auto lg:opacity-100 flex-col justify-center' : 'w-full opacity-100'}`}>
+          {/* Logo Container */}
+          <div 
+            onClick={() => fileInputRef.current?.click()}
+            className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent-pink)] shrink-0 flex items-center justify-center font-bold shadow-lg cursor-pointer relative overflow-hidden group/logo"
+            title="Cambiar Logo"
+          >
+            {logo ? (
+              <img src={logo} alt="Logo" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-xl">{appName.charAt(0).toUpperCase()}</span>
+            )}
+            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/logo:opacity-100 flex items-center justify-center transition-opacity">
+              <UploadCloud size={16} className="text-white" />
+            </div>
           </div>
-          <span className={`font-bold whitespace-nowrap tracking-tight transition-opacity duration-300 ${collapsed ? "lg:hidden" : ""}`}>
-            Micro Apps
-          </span>
+          
+          {/* Text Container */}
+          <div className={`transition-opacity duration-300 flex-1 min-w-0 ${collapsed ? "lg:hidden" : ""}`}>
+            {isEditing ? (
+              <div className="flex flex-col gap-1 w-full animate-in fade-in">
+                <input 
+                  type="text" 
+                  value={appName} 
+                  onChange={handleNameChange}
+                  className="bg-black/40 border border-[var(--color-primary)]/50 rounded px-2 py-1 text-sm font-bold text-white w-full focus:outline-none"
+                  placeholder="Nombre de la App"
+                />
+                <input 
+                  type="text" 
+                  value={slogan} 
+                  onChange={handleSloganChange}
+                  className="bg-black/40 border border-white/10 rounded px-2 py-0.5 text-[10px] text-white/60 w-full focus:outline-none focus:border-white/30"
+                  placeholder="Slogan / Lema"
+                />
+              </div>
+            ) : (
+              <div className="flex flex-col min-w-0 cursor-pointer" onClick={() => !collapsed && setIsEditing(true)}>
+                <span className="font-bold text-lg leading-tight whitespace-nowrap tracking-tight truncate group-hover:text-[var(--color-primary)] transition-colors">
+                  {appName}
+                </span>
+                <span className="text-[10px] leading-tight text-white/40 uppercase tracking-widest truncate mt-0.5">
+                  {slogan}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* Action Buttons */}
+        {!collapsed && (
+          <button 
+            onClick={() => setIsEditing(!isEditing)} 
+            className={`hidden lg:block absolute right-2 top-4 p-1.5 rounded-md transition-colors ${isEditing ? "bg-[var(--color-primary)] text-white" : "opacity-0 group-hover:opacity-100 text-white/40 hover:text-white hover:bg-white/10"}`}
+            title={isEditing ? "Guardar" : "Editar Nombre/Logo"}
+          >
+            {isEditing ? <X size={14} /> : <Edit2 size={14} />}
+          </button>
+        )}
+
         {/* Mobile close button */}
-        <button onClick={onCloseMobile} className="lg:hidden p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-lg">
+        <button onClick={onCloseMobile} className="lg:hidden p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-lg shrink-0">
           <X size={20} />
         </button>
       </div>
