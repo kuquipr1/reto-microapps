@@ -7,6 +7,8 @@ import { Settings, User, Bell, Shield, ChevronRight } from "lucide-react";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { GlowButton } from "@/components/ui/GlowButton";
 import { Input } from "@/components/ui/Input";
+import { useToast } from "@/components/ui/Toast";
+import { createClient } from "@/lib/supabase/client";
 
 export default function SettingsPage() {
   const { language } = useLanguage();
@@ -105,6 +107,29 @@ function AccountSettings() {
 
 function SecuritySettings() {
   const { language } = useLanguage();
+  const { toast } = useToast();
+  const supabase = createClient();
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleUpdatePassword = async () => {
+    if (!newPassword || newPassword !== confirmPassword) {
+      toast(language === "en" ? "Passwords do not match" : "Las contraseñas no coinciden", "error");
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) {
+      toast(error.message, "error");
+    } else {
+      toast(language === "en" ? "Password updated successfully" : "Contraseña actualizada con éxito", "success");
+      setNewPassword("");
+      setConfirmPassword("");
+    }
+    setLoading(false);
+  };
+
   return (
     <GlassCard className="w-full max-w-2xl p-8 animate-in fade-in slide-in-from-right-4 duration-500 relative overflow-hidden">
       <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-[var(--color-accent-blue)]/20 to-transparent rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
@@ -116,12 +141,25 @@ function SecuritySettings() {
         <div className="space-y-5 p-6 bg-black/20 rounded-3xl border border-white/5">
           <h4 className="text-white font-bold">{language === "en" ? "Change Password" : "Cambiar Contraseña"}</h4>
           <div className="space-y-3">
-            <Input type="password" placeholder={language === "en" ? "Current password" : "Contraseña actual"} className="bg-black/30 border-white/5 focus:border-[var(--color-accent-blue)]/50 focus:bg-white/5" />
-            <Input type="password" placeholder={language === "en" ? "New password" : "Nueva contraseña"} className="bg-black/30 border-white/5 focus:border-[var(--color-accent-blue)]/50 focus:bg-white/5" />
-            <Input type="password" placeholder={language === "en" ? "Confirm new password" : "Confirmar nueva contraseña"} className="bg-black/30 border-white/5 focus:border-[var(--color-accent-blue)]/50 focus:bg-white/5" />
+            <Input 
+              type="password" 
+              placeholder={language === "en" ? "New password" : "Nueva contraseña"} 
+              className="bg-black/30 border-white/5 focus:border-[var(--color-accent-blue)]/50 focus:bg-white/5" 
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+            />
+            <Input 
+              type="password" 
+              placeholder={language === "en" ? "Confirm new password" : "Confirmar nueva contraseña"} 
+              className="bg-black/30 border-white/5 focus:border-[var(--color-accent-blue)]/50 focus:bg-white/5" 
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            />
           </div>
           <div className="flex justify-end pt-2">
-            <GlowButton>{language === "en" ? "Update Password" : "Actualizar Contraseña"}</GlowButton>
+            <GlowButton onClick={handleUpdatePassword} disabled={loading}>
+              {loading ? (language === "en" ? "Updating..." : "Actualizando...") : (language === "en" ? "Update Password" : "Actualizar Contraseña")}
+            </GlowButton>
           </div>
         </div>
 
