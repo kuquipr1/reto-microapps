@@ -4,9 +4,28 @@ export async function POST(req: Request) {
   try {
     const { prompt } = await req.json();
 
-    if (!process.env.OPENAI_API_KEY) {
+    let apiKey = process.env.OPENAI_API_KEY;
+
+    if (!apiKey) {
+      try {
+        const fs = require('fs');
+        const path = require('path');
+        const envPath = path.join(process.cwd(), '.env.local');
+        if (fs.existsSync(envPath)) {
+          const envContent = fs.readFileSync(envPath, 'utf8');
+          const match = envContent.match(/OPENAI_API_KEY="(.*?)"/);
+          if (match && match[1]) {
+            apiKey = match[1];
+          }
+        }
+      } catch (e) {
+        // Ignorar errores locales y fallback al mensaje de Vercel
+      }
+    }
+
+    if (!apiKey) {
       return NextResponse.json(
-        { error: "Error: No se encontró la OPENAI_API_KEY en tus variables de entorno (.env.local o Vercel)." },
+        { error: "ERROR VERCEL-NUBE: Vercel sigue sin encontrar tu llave. ¿Ya te aseguraste de hacer el Redeploy?" },
         { status: 500 }
       );
     }
@@ -15,7 +34,7 @@ export async function POST(req: Request) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+        "Authorization": `Bearer ${apiKey}`
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
