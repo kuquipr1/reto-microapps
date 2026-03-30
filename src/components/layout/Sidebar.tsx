@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronsLeft, ChevronsRight, Languages, X } from "lucide-react";
+import { ChevronsLeft, ChevronsRight, X, LayoutDashboard, Users, BarChart3, HeadphonesIcon, FolderOpen, FileText } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface SidebarProps {
@@ -18,9 +18,34 @@ export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile
 
   const links = [
     {
-      name: language === "en" ? "Micro App #1" : "Micro App #1",
-      href: "#",
-      icon: Languages,
+      name: language === "en" ? "Dashboard" : "Panel Principal",
+      href: "/dashboard",
+      icon: LayoutDashboard,
+    },
+    {
+      name: language === "en" ? "CRM (Customers)" : "CRM (Clientes)",
+      href: "/apps/crm",
+      icon: Users,
+    },
+    {
+      name: language === "en" ? "Analytics" : "Analíticas",
+      href: "/apps/analytics",
+      icon: BarChart3,
+    },
+    {
+      name: language === "en" ? "HelpDesk" : "Soporte (HelpDesk)",
+      href: "/apps/helpdesk",
+      icon: HeadphonesIcon,
+    },
+    {
+      name: language === "en" ? "Documents" : "Documentos",
+      href: "/apps/documents",
+      icon: FolderOpen,
+    },
+    {
+      name: language === "en" ? "Payroll" : "Nóminas",
+      href: "/apps/payroll",
+      icon: FileText,
     },
   ];
 
