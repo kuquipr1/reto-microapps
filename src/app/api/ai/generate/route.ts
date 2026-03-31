@@ -4,12 +4,14 @@ export async function POST(req: Request) {
   try {
     const { prompt } = await req.json();
 
-    const keyP1 = "sk-proj-Wf2DzIyR6RDxXIuEx46HKjni7iZis6whHsu6GJ4KBwknwaryIngL";
-    const keyP2 = "6Zk5N1pzDiq_3-IZnY04N2T3BlbkFJu2yl6Rug84lDgdgFPyYYihFa-srw15hY0TJNWY_5owSRUfcyXjB3jL4Uwr4UI7OK6CfXy2J_UA";
-    let apiKey = process.env.OPENAI_API_KEY || (keyP1 + keyP2);
+    const apiKey = process.env.OPENAI_API_KEY;
 
-    // Hemos eliminado el bloqueo de Vercel/Localhost. La llave funcionará directamente con el valor pre-guardado si las variables fallan.
-
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: "La llave de OpenAI (OPENAI_API_KEY) no está configurada en las Variables de Entorno." },
+        { status: 401 }
+      );
+    }
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
