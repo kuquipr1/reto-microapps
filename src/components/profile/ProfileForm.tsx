@@ -9,11 +9,14 @@ import { useToast } from "@/components/ui/Toast";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { User, Mail, Loader2, Camera, Shield, Award } from "lucide-react";
 
+import { createClient } from "@/lib/supabase/client";
+
 export function ProfileForm() {
   const { language } = useLanguage();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [avatar, setAvatar] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -78,8 +81,37 @@ export function ProfileForm() {
         canvas.height = height;
         ctx?.drawImage(img, 0, 0, width, height);
         
-        const dataUrl = canvas.toDataURL("image/webp", 0.8);
-        setAvatar(dataUrl);
+        canvas.toBlob(async (blob) => {
+          if (!blob) return;
+          setUploadingAvatar(true);
+          try {
+            const supabase = createClient();
+            const fileName = `avatar-${profile?.id || "user"}-${Date.now()}.webp`;
+            
+            const { data, error } = await supabase.storage
+              .from("avatars")
+              .upload(fileName, blob, {
+                cacheControl: "3600",
+                upsert: true
+              });
+              
+            if (error) throw error;
+            
+            const { data: { publicUrl } } = supabase.storage
+              .from("avatars")
+              .getPublicUrl(fileName);
+              
+            await userService.updateProfile({ avatar_url: publicUrl });
+            setAvatar(publicUrl);
+            window.dispatchEvent(new Event("profile-updated"));
+            
+            toast(language === "en" ? "Avatar successfully updated!" : "¡Avatar actualizado con éxito!", "success");
+          } catch (err: any) {
+            toast(err.message || "Error uploading avatar", "error");
+          } finally {
+            setUploadingAvatar(false);
+          }
+        }, "image/webp", 0.8);
       };
       if (event.target?.result) {
         img.src = event.target.result as string;
@@ -93,17 +125,21 @@ export function ProfileForm() {
     setSaving(true);
 
     try {
+      if (formData.firstName === profile?.first_name && formData.lastName === profile?.last_name) {
+        setSaving(false);
+        return;
+      }
+
       await userService.updateProfile({
         first_name: formData.firstName,
         last_name: formData.lastName,
-        avatar_url: avatar,
       });
+      window.dispatchEvent(new Event("profile-updated"));
+      
       toast(
         language === "en" ? "Profile updated successfully." : "Perfil actualizado con éxito.", 
         "success" 
       );
-      
-      // Update local storage/context if needed, or just let the header re-fetch on reload
     } catch (error: any) {
       toast(
         language === "en" ? "Error updating profile." : "Error al actualizar el perfil.", 
@@ -151,7 +187,7 @@ export function ProfileForm() {
           </div>
           {/* Small camera badge */}
           <div className="absolute bottom-1 right-1 w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 flex items-center justify-center shadow-lg border-[3px] border-[#0F0A1A] transition-transform group-hover:scale-110">
-            <Camera size={16} className="text-white" />
+            {uploadingAvatar ? <Loader2 size={16} className="text-white animate-spin" /> : <Camera size={16} className="text-white" />}
           </div>
         </div>
 
@@ -164,7 +200,7 @@ export function ProfileForm() {
           {profile?.email || (language === "en" ? "No email provided" : "Sin correo")}
         </p>
 
-        {/* Role & Level Blocks */}
+        {/* Metadata Blocks */}
         <div className="w-full space-y-3 z-10">
           <div className="flex items-center justify-between px-5 py-4 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
             <div className="flex items-center gap-3">
@@ -173,10 +209,10 @@ export function ProfileForm() {
                 {language === "en" ? "Role" : "Rol"}
               </span>
             </div>
-            <span className="text-xs font-bold text-white/90">
+            <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${profile?.role === "admin" ? "bg-purple-500/20 text-purple-400 border-purple-500/30" : "bg-white/10 text-white/70 border-white/20"}`}>
               {profile?.role === "admin" 
                 ? (language === "en" ? "Admin" : "Administrador") 
-                : (language === "en" ? "Normal User" : "Usuario Normal")}
+                : (language === "en" ? "Member" : "Miembro")}
             </span>
           </div>
 
@@ -184,13 +220,21 @@ export function ProfileForm() {
             <div className="flex items-center gap-3">
               <Award size={16} className="text-orange-400 opacity-80" />
               <span className="text-xs font-medium text-white/60">
-                {language === "en" ? "Level" : "Nivel"}
+                {language === "en" ? "Plan" : "Plan Actual"}
               </span>
             </div>
             <span className="text-xs font-bold text-white/90">
-              {language === "en" ? "Level 1" : "Nivel 1"}
+              {profile?.plans 
+                ? (language === "en" ? profile.plans.name_en : profile.plans.name_es) 
+                : (language === "en" ? "No plan" : "Sin plan")}
             </span>
           </div>
+
+          <p className="text-xs text-white/40 text-center mt-4">
+            {language === "en" 
+              ? `Member since ${new Date(profile?.created_at || Date.now()).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}` 
+              : `Miembro desde ${new Date(profile?.created_at || Date.now()).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}`}
+          </p>
         </div>
       </GlassCard>
 

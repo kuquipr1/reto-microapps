@@ -23,7 +23,22 @@ export function Header({ onToggleMobileSidebar }: { onToggleMobileSidebar: () =>
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user);
     });
-    userService.getProfile().then(setProfile).catch(() => {});
+    
+    const fetchProfile = () => {
+      userService.getProfile().then(setProfile).catch(() => {});
+    };
+    
+    fetchProfile();
+
+    const handleProfileUpdate = () => {
+      fetchProfile();
+      supabase.auth.getUser().then(({ data }) => {
+        setUser(data.user);
+      });
+    };
+
+    window.addEventListener("profile-updated", handleProfileUpdate);
+    return () => window.removeEventListener("profile-updated", handleProfileUpdate);
   }, []);
 
   const handleLogout = async () => {
@@ -121,7 +136,7 @@ export function Header({ onToggleMobileSidebar }: { onToggleMobileSidebar: () =>
                   <p className="text-xs text-white/40 truncate">{user?.email}</p>
                 </div>
                 <div className="p-2 space-y-1">
-                  <Link href="/settings" className="w-full text-left px-3 py-2 text-sm text-white/70 hover:text-white flex items-center gap-2 hover:bg-white/10 rounded-lg transition-colors">
+                  <Link href="/profile" className="w-full text-left px-3 py-2 text-sm text-white/70 hover:text-white flex items-center gap-2 hover:bg-white/10 rounded-lg transition-colors">
                     <UserIcon size={16} />
                     {language === 'en' ? 'Profile' : 'Perfil'}
                   </Link>

@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Shield, User, Clock } from "lucide-react";
+import { AdminMetricsClient } from "@/components/admin/AdminMetricsClient";
+import { AdminRecentActivityClient } from "@/components/admin/AdminRecentActivityClient";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -13,9 +15,83 @@ export default async function AdminUsersPage() {
     .select("*, plans(name_en, name_es, slug)")
     .order("created_at", { ascending: false });
 
+  const totalUsers = users?.length || 0;
+  const usersWithPlan = users?.filter(u => u.plan_id !== null).length || 0;
+
+  const { count: exactTotalExecutions } = await supabase
+    .from("app_executions")
+    .select("*", { count: "exact", head: true });
+  const totalExecutions = exactTotalExecutions || 0;
+
+  const { data: webhooks } = await supabase
+    .from("webhook_logs")
+    .select("id, created_at, status, event_type, normalized_payload, users(first_name, last_name, email)")
+    .eq("status", "processed")
+    .order("created_at", { ascending: false });
+    
+  let totalRevenue = 0;
+  webhooks?.forEach(wh => {
+    try {
+      if (wh.normalized_payload && typeof wh.normalized_payload === 'object') {
+        const payload = wh.normalized_payload as any;
+        if (payload.amount) totalRevenue += Number(payload.amount);
+      }
+    } catch (e) {
+      // Ignore parse errors on bad webhooks
+    }
+  });
+
+  const { data: recentExecutions } = await supabase
+    .from("app_executions")
+    .select("id, created_at, users(first_name, last_name, email), micro_apps(name_en, name_es)")
+    .order("created_at", { ascending: false })
+    .limit(10);
+
+  const activityList: any[] = [];
+
+  users?.slice(0, 10).forEach(u => {
+    activityList.push({
+      id: `u-${u.id}`,
+      type: "user",
+      date: u.created_at,
+      name: u.first_name ? `${u.first_name} ${u.last_name || ""}` : u.email
+    });
+  });
+
+  recentExecutions?.forEach((e: any) => {
+    activityList.push({
+      id: `e-${e.id}`,
+      type: "execution",
+      date: e.created_at,
+      name: e.users?.first_name ? `${e.users.first_name} ${e.users.last_name || ""}` : (e.users?.email || "Unknown"),
+      appNameEn: e.micro_apps?.name_en || "App",
+      appNameEs: e.micro_apps?.name_es || "App"
+    });
+  });
+
+  webhooks?.slice(0, 10).forEach((w: any) => {
+    let amount = 0;
+    if (w.normalized_payload && typeof w.normalized_payload === 'object') {
+      const payload = w.normalized_payload as any;
+      if (payload.amount) amount = Number(payload.amount);
+    }
+    if (amount > 0 || w.event_type === 'payment.completed') {
+      activityList.push({
+        id: `w-${w.id}`,
+        type: "payment",
+        date: w.created_at,
+        name: w.users?.first_name ? `${w.users.first_name} ${w.users.last_name || ""}` : (w.users?.email || "Unknown"),
+        amount: amount
+      });
+    }
+  });
+
+  activityList.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const finalActivities = activityList.slice(0, 10);
+
   return (
     <div className="space-y-8">
-      <header className="mb-8">
+      <header className="mb-4">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-extrabold text-white mb-2">
@@ -30,8 +106,12 @@ export default async function AdminUsersPage() {
           </button>
         </div>
       </header>
+      
+      <AdminMetricsClient 
+        metrics={{ totalUsers, usersWithPlan, totalExecutions, totalRevenue }} 
+      />
 
-      <GlassCard className="overflow-hidden border border-white/10">
+      <GlassCard className="overflow-hidden border border-white/10 mt-8">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -91,6 +171,8 @@ export default async function AdminUsersPage() {
           </table>
         </div>
       </GlassCard>
+
+      <AdminRecentActivityClient activities={finalActivities} />
     </div>
   );
 }

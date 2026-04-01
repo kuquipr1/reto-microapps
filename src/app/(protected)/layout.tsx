@@ -3,10 +3,13 @@
 import React, { useState } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { Linkedin, Instagram, Globe } from "lucide-react";
 
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { language } = useLanguage();
 
   return (
     <div className="fixed inset-0 w-full h-dvh flex overflow-hidden z-0 bg-[var(--color-base-100)]">
@@ -28,9 +31,27 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
             <div className="absolute -bottom-28 -right-20 w-[550px] h-[550px] rounded-full filter blur-[40px]" style={{ background: 'radial-gradient(circle, rgba(56, 189, 248, 0.2) 0%, rgba(56, 189, 248, 0.06) 40%, transparent 70%)' }} />
           </div>
 
-          <div className="relative z-10">
+          <div className="relative z-10 min-h-[calc(100vh-200px)]">
             {children}
           </div>
+
+          {/* Footer */}
+          <footer className="relative z-10 mt-16 pt-8 pb-4 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/40">
+            <p>
+              &copy; {new Date().getFullYear()} AdminSmart 369. {language === "en" ? "All rights reserved." : "Todos los derechos reservados."}
+            </p>
+            <div className="flex items-center gap-4">
+              <a href="#" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-primary)] transition-colors">
+                <Linkedin size={16} />
+              </a>
+              <a href="#" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-primary)] transition-colors">
+                <Instagram size={16} />
+              </a>
+              <a href="#" className="hover:text-[var(--color-primary)] transition-colors">
+                <Globe size={16} />
+              </a>
+            </div>
+          </footer>
         </main>
       </div>
     </div>

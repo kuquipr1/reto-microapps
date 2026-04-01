@@ -1,12 +1,38 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Users, Activity, TrendingUp, DollarSign, ArrowUpRight, ArrowDownRight, MoreHorizontal, Copy, PlayCircle } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { GlowButton } from "@/components/ui/GlowButton";
+import { createClient } from "@/lib/supabase/client";
 
 export default function DashboardPage() {
   const { language } = useLanguage();
+
+  const [userName, setUserName] = useState<string>("");
+  const [greetingInfo, setGreetingInfo] = useState({ textEn: "Good morning", textEs: "Buenos días", emoji: "🌤️" });
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const firstName = user.user_metadata?.first_name || user.email?.split('@')[0] || "User";
+        setUserName(firstName);
+      }
+    };
+    fetchUser();
+
+    const hour = new Date().getHours();
+    if (hour < 12) {
+      setGreetingInfo({ textEn: "Good morning", textEs: "Buenos días", emoji: "☀️" });
+    } else if (hour < 18) {
+      setGreetingInfo({ textEn: "Good afternoon", textEs: "Buenas tardes", emoji: "🌤️" });
+    } else {
+      setGreetingInfo({ textEn: "Good evening", textEs: "Buenas noches", emoji: "🌙" });
+    }
+  }, []);
 
   const stats = [
     {
@@ -98,8 +124,18 @@ export default function DashboardPage() {
 
   return (
     <div className="w-full max-w-7xl mx-auto p-6 md:p-8 space-y-8 pb-12">
+      {/* Greeting Section */}
+      <div className="mb-2 animate-in slide-in-from-bottom-2 duration-500">
+        <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight flex items-center gap-3">
+          {greetingInfo.emoji} {language === "en" ? greetingInfo.textEn : greetingInfo.textEs}, <span className="text-[var(--color-primary)]">{userName || "..."}</span>
+        </h1>
+        <p className="text-white/60 mt-2 text-sm md:text-base font-medium">
+          {language === "en" ? "What will you create today?" : "¿Qué vas a crear hoy?"}
+        </p>
+      </div>
+
       {/* Header section inside page */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-t border-white/5 pt-4">
         <div>
           <h1 className="text-2xl font-bold text-white tracking-tight">
             {language === "en" ? "Dashboard Overview" : "Resumen del Dashboard"}

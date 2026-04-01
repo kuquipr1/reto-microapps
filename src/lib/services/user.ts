@@ -9,6 +9,10 @@ export interface UserProfile {
   role: "admin" | "user";
   created_at: string;
   updated_at: string;
+  plans?: {
+    name_en: string;
+    name_es: string;
+  };
 }
 
 export const userService = {
@@ -32,7 +36,7 @@ export const userService = {
 
     const { data, error } = await supabase
       .from("users")
-      .select("*")
+      .select("*, plans(name_en, name_es)")
       .eq("id", user.id)
       .single();
 
@@ -40,7 +44,7 @@ export const userService = {
       console.error("Error fetching user profile:", error);
       throw new Error(`Error al obtener perfil: ${error.message}`);
     }
-    return data as UserProfile;
+    return data as any;
   },
 
   async updateProfile(profile: Partial<Pick<UserProfile, "first_name" | "last_name" | "avatar_url">>) {
@@ -60,6 +64,16 @@ export const userService = {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) throw new Error("Not authenticated");
+
+    // Sync Auth metadata if names are updated
+    if (profile.first_name !== undefined || profile.last_name !== undefined) {
+      await supabase.auth.updateUser({
+        data: {
+          first_name: profile.first_name !== undefined ? profile.first_name : user.user_metadata?.first_name,
+          last_name: profile.last_name !== undefined ? profile.last_name : user.user_metadata?.last_name,
+        }
+      });
+    }
 
     const { data, error } = await supabase
       .from("users")
