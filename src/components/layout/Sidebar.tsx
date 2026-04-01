@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronsLeft, ChevronsRight, X, LayoutDashboard, LayoutGrid, CreditCard, Shield, Users, BarChart3, HeadphonesIcon, FolderOpen, FileText, UploadCloud, Edit2, TrendingUp, Mail, Package, Lock, Layers, PenTool, Share2, Video, Briefcase, Radio } from "lucide-react";
+import { ChevronsLeft, ChevronsRight, X, LayoutDashboard, LayoutGrid, CreditCard, Shield, Users, BarChart3, HeadphonesIcon, FolderOpen, FileText, UploadCloud, Edit2, TrendingUp, Mail, Package, Lock, Layers, PenTool, Share2, Video, Briefcase, Radio, CheckCircle2, MessageSquare, Moon, Activity } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
@@ -144,6 +144,31 @@ export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile
       name: language === "en" ? "Payroll" : "Nóminas",
       href: "/apps/payroll",
       icon: FileText,
+    },
+    {
+      name: "FichaFit (Gym)",
+      href: "/apps/fichafit",
+      icon: CheckCircle2,
+    },
+    {
+      name: "GymBot FAQ",
+      href: "/apps/gymbot",
+      icon: MessageSquare,
+    },
+    {
+      name: "NightLead Gym",
+      href: "/apps/nightlead",
+      icon: Moon,
+    },
+    {
+      name: "PulsoGym (Reporte)",
+      href: "/apps/pulsogym",
+      icon: Activity,
+    },
+    {
+      name: "ContratoFit",
+      href: "/apps/contratofit",
+      icon: PenTool,
     },
   ];
 

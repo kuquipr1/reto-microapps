@@ -9,7 +9,7 @@ export async function getUserAccessibleApps(userId: string): Promise<string[]> {
   // for users other than the current authenticated user (e.g., admin viewing another user's apps).
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
+    process.env.SUPABASE_SECRET_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
   // Get user's plan_id
