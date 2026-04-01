@@ -13,7 +13,7 @@ interface Translations {
 
 const translations: Translations = {
   // Common
-  "app.name": { es: "Micro-Apps Portal", en: "Micro-Apps Portal" },
+  "app.name": { es: "AdminSmart 369", en: "AdminSmart 369" },
   "app.tagline": { es: "Tu portal de micro aplicaciones", en: "Your micro applications portal" },
   "email.placeholder": { es: "Tu correo electrónico", en: "Your email address" },
   "password.placeholder": { es: "Tu contraseña", en: "Your password" },
@@ -41,7 +41,7 @@ const translations: Translations = {
   "forgot.success_toast": { es: "Enlace enviado a tu correo", en: "Link sent to your email" },
 
   // Welcome
-  "welcome.greeting": { es: "¡Bienvenido al Portal de Micro-Apps!", en: "Welcome to the Micro-Apps Portal!" },
+  "welcome.greeting": { es: "¡Bienvenido a AdminSmart 369!", en: "Welcome to AdminSmart 369!" },
   "welcome.subheading": { es: "Estamos preparando algo increíble para ti.", en: "We are preparing something amazing for you." },
   "welcome.coming_soon": { es: "Próximamente", en: "Coming Soon" },
   "welcome.hello": { es: "Hola", en: "Hello" },
@@ -144,7 +144,7 @@ const translations: Translations = {
   "documents.empty": { es: "No hay documentos", en: "No documents found" },
 
   // Landing
-  "landing.title": { es: "Portal de Micro-Apps", en: "Micro-Apps Portal" },
+  "landing.title": { es: "AdminSmart 369", en: "AdminSmart 369" },
   "landing.subtitle": { es: "Accede a todas tus herramientas desde un solo lugar con una experiencia premium.", en: "Access all your tools from one place with a premium experience." },
   "landing.get_started": { es: "Empezar ahora", en: "Get Started" },
   "landing.features.title": { es: "Características Principales", en: "Key Features" },

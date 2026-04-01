@@ -10,8 +10,8 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'Micro-Apps Portal',
-  description: 'Tu portal de micro aplicaciones',
+  title: 'AdminSmart 369',
+  description: 'Tu portal de herramientas avanzadas',
 }
 
 export default function RootLayout({

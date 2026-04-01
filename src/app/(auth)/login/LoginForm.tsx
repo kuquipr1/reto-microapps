@@ -66,7 +66,7 @@ export default function LoginForm() {
           <span className="text-2xl font-bold text-white">M</span>
         </div>
         <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent-pink)]">
-          Micro-Apps Portal
+          AdminSmart 369
         </h1>
         <p className="text-sm text-[var(--color-base-content)] opacity-70 mt-2">
           {t('tagline')}

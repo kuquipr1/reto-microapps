@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronsLeft, ChevronsRight, X, LayoutDashboard, Users, BarChart3, HeadphonesIcon, FolderOpen, FileText, UploadCloud, Edit2, TrendingUp, Mail, Package, Lock, Layers, PenTool, Share2, Video, Briefcase } from "lucide-react";
+import { ChevronsLeft, ChevronsRight, X, LayoutDashboard, LayoutGrid, CreditCard, Shield, Users, BarChart3, HeadphonesIcon, FolderOpen, FileText, UploadCloud, Edit2, TrendingUp, Mail, Package, Lock, Layers, PenTool, Share2, Video, Briefcase, Radio } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
@@ -19,12 +19,12 @@ export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile
   const pathname = usePathname();
 
   const [logo, setLogo] = useState<string | null>(null);
-  const [appName, setAppName] = useState("Micro Apps");
+  const [appName, setAppName] = useState("AdminSmart 369");
   const [slogan, setSlogan] = useState("Your Portal");
   const [isEditing, setIsEditing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [dynamicApps, setDynamicApps] = useState<any[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const savedLogo = localStorage.getItem("custom_logo");
@@ -34,15 +34,18 @@ export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile
     if (savedName) setAppName(savedName);
     if (savedSlogan) setSlogan(savedSlogan);
 
-    // Fetch dynamic micro apps
-    const fetchApps = async () => {
+    // Fetch user role for admin link
+    const fetchRole = async () => {
       try {
         const supabase = createClient();
-        const { data, error } = await supabase.from('micro_apps').select('slug, name_es, name_en, icon');
-        if (data && !error) setDynamicApps(data);
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data } = await supabase.from('users').select('role').eq('id', user.id).single();
+          if (data) setIsAdmin(data.role === 'admin');
+        }
       } catch (e) {}
     };
-    fetchApps();
+    fetchRole();
   }, []);
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -93,11 +96,24 @@ export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile
     localStorage.setItem("custom_slogan", e.target.value);
   };
 
-  const links = [
+  const links: any[] = [
     {
       name: language === "en" ? "Dashboard" : "Panel Principal",
       href: "/dashboard",
       icon: LayoutDashboard,
+      activeStart: "/dashboard",
+    },
+    {
+      name: "AdminSmart 369",
+      href: "/apps",
+      icon: LayoutGrid,
+      activeStart: "/apps",
+    },
+    {
+      name: language === "en" ? "Plans" : "Planes",
+      href: "/plans",
+      icon: CreditCard,
+      activeStart: "/plans",
     },
     {
       name: language === "en" ? "CRM (Customers)" : "CRM (Clientes)",
@@ -131,29 +147,28 @@ export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile
     },
   ];
 
-  // Helper map to dynamically render standard lucide icons returned as string from DB
-  const getIcon = (iconName: string) => {
-    const icons: any = {
-      Mail: Mail,
-      Package: Package,
-      Lock: Lock,
-      BarChart3: BarChart3,
-      PenTool: PenTool,
-      Share2: Share2,
-      Video: Video,
-      Briefcase: Briefcase
-    };
-    return icons[iconName] || Layers; // Fallback icon
-  };
-
-  const allLinks = [
-    ...links,
-    ...dynamicApps.map(app => ({
-      name: language === "en" ? app.name_en : app.name_es,
-      href: `/apps/${app.slug}`,
-      icon: getIcon(app.icon)
-    }))
-  ];
+  if (isAdmin) {
+    links.push({
+      name: "Admin",
+      href: "/admin",
+      icon: Shield,
+      activeStart: undefined,
+    });
+    links.push({
+      name: "Webhooks",
+      href: "/admin/webhooks",
+      icon: Radio,
+      activeStart: "/admin/webhooks",
+      isChild: true,
+    });
+    links.push({
+      name: "Email",
+      href: "/admin/email",
+      icon: Mail,
+      activeStart: "/admin/email",
+      isChild: true,
+    });
+  }
 
   const content = (
     <div className="flex flex-col h-full bg-[#0A0520]/80 backdrop-blur-2xl border-r border-white/10 text-white transition-all duration-300">
@@ -230,23 +245,41 @@ export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile
 
       {/* Navigation */}
       <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-        {allLinks.map((link) => {
-          const isActive = pathname === link.href;
+        {links.map((link) => {
+          // If activeStart is defined, use startsWith logic (perfect for /apps and /admin subpages)
+          // Otherwise, exact match for backwards compatibility
+          const isActive = link.activeStart 
+            ? pathname.startsWith(link.activeStart) && (link.activeStart !== '/apps' || pathname === '/apps' || !pathname.includes('/', 6))
+            : pathname === link.href;
+            
           const Icon = link.icon;
+          const isChild = (link as any).isChild;
+          
+          let itemClass = `flex items-center gap-3 rounded-xl transition-all duration-200 group `;
+          itemClass += isChild 
+            ? `ml-4 pl-4 py-2 text-xs border-l ${isActive ? 'border-[var(--color-primary)]/50' : 'border-white/10'}` 
+            : `px-3 py-2.5`;
+            
+          if (collapsed && isChild) {
+            itemClass += ` justify-center px-2 ml-0 pl-2 border-l-0`;
+          }
+
+          if (isActive) {
+            itemClass += ` bg-[var(--color-primary)]/20 text-[var(--color-primary)] shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] border border-[var(--color-primary)]/30`;
+          } else {
+            itemClass += ` text-white/60 hover:text-white hover:bg-white/5`;
+          }
+
           return (
             <Link
               key={link.name}
               href={link.href}
               onClick={() => onCloseMobile()}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${
-                isActive 
-                  ? "bg-[var(--color-primary)]/20 text-[var(--color-primary)] shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] border border-[var(--color-primary)]/30" 
-                  : "text-white/60 hover:text-white hover:bg-white/5"
-              }`}
+              className={itemClass}
               title={collapsed ? link.name : undefined}
             >
-              <Icon size={20} className={`shrink-0 ${isActive ? "text-[var(--color-primary)]" : "text-white/40 group-hover:text-white/80"}`} />
-              <span className={`whitespace-nowrap font-medium text-sm transition-opacity duration-300 ${collapsed ? "lg:opacity-0 lg:w-0 lg:overflow-hidden" : ""}`}>
+              <Icon size={isChild ? 16 : 20} className={`shrink-0 ${isActive ? "text-[var(--color-primary)]" : "text-white/40 group-hover:text-white/80"}`} />
+              <span className={`whitespace-nowrap font-medium ${isChild ? 'text-xs' : 'text-sm'} transition-opacity duration-300 ${collapsed ? "lg:opacity-0 lg:w-0 lg:overflow-hidden" : ""}`}>
                 {link.name}
               </span>
             </Link>

@@ -84,7 +84,7 @@ export function Header({ onToggleMobileSidebar }: { onToggleMobileSidebar: () =>
                 </div>
                 <div className="p-4 bg-white/5 hover:bg-white/10 transition-colors cursor-pointer border-l-2 border-[var(--color-primary)]">
                   <p className="text-sm text-white font-medium mb-1">{language === 'en' ? 'System Update' : 'Actualización del Sistema'}</p>
-                  <p className="text-xs text-white/50">{language === 'en' ? 'Welcome to the Micro-Apps Portal!' : '¡Bienvenido al Portal de Micro-Apps!'}</p>
+                  <p className="text-xs text-white/50">{language === 'en' ? 'Welcome to AdminSmart 369!' : '¡Bienvenido a AdminSmart 369!'}</p>
                 </div>
               </div>
             </>
