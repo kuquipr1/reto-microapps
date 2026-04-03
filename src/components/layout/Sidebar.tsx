@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronsLeft, ChevronsRight, X, LayoutDashboard, LayoutGrid, CreditCard, Shield, Users, BarChart3, HeadphonesIcon, FolderOpen, FileText, UploadCloud, Edit2, TrendingUp, Mail, Package, Lock, Layers, PenTool, Share2, Video, Briefcase, Radio, CheckCircle2, MessageSquare, Moon, Activity, Zap } from "lucide-react";
+import { ChevronsLeft, ChevronsRight, X, LayoutDashboard, LayoutGrid, CreditCard, Shield, Users, BarChart3, HeadphonesIcon, FolderOpen, FileText, UploadCloud, Edit2, TrendingUp, Mail, Package, Lock, Layers, PenTool, Share2, Video, Briefcase, Radio, CheckCircle2, MessageSquare, Moon, Activity, Zap, Calendar } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
@@ -174,6 +174,11 @@ export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile
       name: "InscripciónTotal ⚡",
       href: "/apps/inscripcion",
       icon: Zap,
+    },
+    {
+      name: "ContentFlow AI 📅",
+      href: "/apps/contentflow",
+      icon: Calendar,
     },
   ];
 
